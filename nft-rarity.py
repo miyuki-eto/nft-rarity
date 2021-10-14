@@ -54,11 +54,11 @@ def update_collection_metadata(contract):
         json.dump(results, outfile)
 
 
-def load_data(contract):
+def load_data(contract, update):
     if not os.path.exists('data'):
         os.makedirs('data')
 
-    if not os.path.isfile('data/' + contract + '.json'):
+    if (not os.path.isfile('data/' + contract + '.json')) or update:
         update_collection_metadata(contract)
 
     with open('data/' + contract + '.json') as json_file:
@@ -70,14 +70,17 @@ def calculate_rarity(data):
     rarity_data = []
     trait_names = []
     for asset in data:
-        asset_dict = {}
-        asset_dict['token_id'] = '' if 'token_id' not in asset else asset['token_id']
-        asset_dict['link'] = '' if 'permalink' not in asset else asset['permalink']
+        asset_dict = {'token_id': '' if 'token_id' not in asset else asset['token_id'],
+                      'link': '' if 'permalink' not in asset else asset['permalink']}
         if len(asset['traits']) > 0:
             asset_dict['trait_count'] = len(asset['traits'])
             for trait in asset['traits']:
                 asset_dict[trait['trait_type']] = trait['value']
                 trait_names.append(trait['trait_type'])
+
+        if asset['sell_orders'] is not None:
+            asset_dict['price'] = float(asset['sell_orders'][0]['current_price']) / 10 ** float(asset['sell_orders'][0]['payment_token_contract']['decimals'])
+            asset_dict['currency'] = asset['sell_orders'][0]['payment_token_contract']['symbol']
 
         rarity_data.append(asset_dict)
         trait_names = list(set(trait_names))
@@ -86,22 +89,38 @@ def calculate_rarity(data):
     fn_df = fn_df.fillna('-')
 
     fn_df['stat_rarity'] = 1
+    fn_df['score_rarity'] = 0
 
     trait_names.append('trait_count')
     for trait_name in trait_names:
-        trait_freq = dict(fn_df[trait_name].value_counts(normalize=True) * 100)
-        fn_df[trait_name] = fn_df[trait_name].map(trait_freq)
-        fn_df['stat_rarity'] = fn_df['stat_rarity'] * fn_df[trait_name]
+        trait_freq_score = dict(fn_df[trait_name].value_counts())
+        fn_df[trait_name + '_score'] = 1 / (fn_df[trait_name].map(trait_freq_score) / len(fn_df))
+        fn_df['score_rarity'] = fn_df['score_rarity'] + fn_df[trait_name + '_score']
 
-    fn_df['stat_rarity'] = fn_df['stat_rarity'] * 100
-    fn_df["stat_rank"] = fn_df["stat_rarity"].rank(ascending=True, method='min')
-    fn_df.sort_values(['stat_rarity'], inplace=True, ascending=[True])
+    fn_df['score_rarity'] = fn_df['score_rarity']
+    fn_df["score_rank"] = fn_df["score_rarity"].rank(ascending=False, method='min')
+    fn_df.sort_values(['score_rarity'], inplace=True, ascending=[False])
     fn_df.reset_index(drop=True, inplace=True)
+    fn_df['score_rank'] = fn_df['score_rank'].astype(int)
     return fn_df
 
 
-collection = "0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5"
-raw_data = load_data(collection)
+collection = "0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5" #KitPics
+# collection = "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d" #Bored Ape Yacht Club
+
+update_data = False
+raw_data = load_data(collection, update_data)
 df = calculate_rarity(raw_data)
 
-print(df.head(20))
+for_sale = df[df['price'] != '-'][['token_id', 'price', 'currency', 'link', 'score_rarity', 'score_rank']]
+print(for_sale)
+
+import requests
+
+url = "https://api.opensea.io/wyvern/v1/orders?asset_contract_address=0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5&bundled=false&include_bundled=false&include_invalid=false&token_ids=4070&token_ids=5105&limit=20&offset=0&order_by=created_date&order_direction=desc"
+
+headers = {"Accept": "application/json"}
+
+response = requests.request("GET", url, headers=headers)
+
+pprint(response.json())
