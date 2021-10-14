@@ -82,22 +82,22 @@ def calculate_rarity(data):
         rarity_data.append(asset_dict)
         trait_names = list(set(trait_names))
 
-    df = pd.DataFrame(rarity_data)
-    df = df.fillna('-')
+    fn_df = pd.DataFrame(rarity_data)
+    fn_df = fn_df.fillna('-')
 
-    df['stat_rarity'] = 1
+    fn_df['stat_rarity'] = 1
 
     trait_names.append('trait_count')
     for trait_name in trait_names:
-        trait_freq = dict(df[trait_name].value_counts(normalize=True) * 100)
-        df[trait_name] = df[trait_name].map(trait_freq)
-        df['stat_rarity'] = df['stat_rarity'] * df[trait_name]
+        trait_freq = dict(fn_df[trait_name].value_counts(normalize=True) * 100)
+        fn_df[trait_name] = fn_df[trait_name].map(trait_freq)
+        fn_df['stat_rarity'] = fn_df['stat_rarity'] * fn_df[trait_name]
 
-    df['stat_rarity'] = df['stat_rarity'] * 100
-    df["stat_rank"] = df["stat_rarity"].rank(ascending=True, method='min')
-    df.sort_values(['stat_rarity'], inplace=True, ascending=[True])
-    df.reset_index(drop=True, inplace=True)
-    return df
+    fn_df['stat_rarity'] = fn_df['stat_rarity'] * 100
+    fn_df["stat_rank"] = fn_df["stat_rarity"].rank(ascending=True, method='min')
+    fn_df.sort_values(['stat_rarity'], inplace=True, ascending=[True])
+    fn_df.reset_index(drop=True, inplace=True)
+    return fn_df
 
 
 collection = "0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5"
