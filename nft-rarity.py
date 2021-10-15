@@ -108,19 +108,31 @@ def calculate_rarity(data):
 collection = "0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5" #KitPics
 # collection = "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d" #Bored Ape Yacht Club
 
-update_data = False
-raw_data = load_data(collection, update_data)
-df = calculate_rarity(raw_data)
+# update_data = False
+# raw_data = load_data(collection, update_data)
+# df = calculate_rarity(raw_data)
+#
+# for_sale = df[df['price'] != '-'][['token_id', 'price', 'currency', 'link', 'score_rarity', 'score_rank']]
+# print(for_sale)
 
-for_sale = df[df['price'] != '-'][['token_id', 'price', 'currency', 'link', 'score_rarity', 'score_rank']]
-print(for_sale)
+# ORDERS
+# import requests
+#
+# url = "https://api.opensea.io/wyvern/v1/orders?asset_contract_address=0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5&bundled=false&include_bundled=false&include_invalid=false&token_ids=4070&token_ids=5105&limit=50&offset=0&order_by=created_date&order_direction=desc"
+#
+# headers = {"Accept": "application/json"}
+#
+# response = requests.request("GET", url, headers=headers).json()
+#
+# pprint(response)
+# print(len(response))
 
 import requests
 
-url = "https://api.opensea.io/wyvern/v1/orders?asset_contract_address=0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5&bundled=false&include_bundled=false&include_invalid=false&token_ids=4070&token_ids=5105&limit=20&offset=0&order_by=created_date&order_direction=desc"
+url = "https://api.opensea.io/api/v1/events?asset_contract_address=0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5&only_opensea=false&offset=0&limit=50"
 
 headers = {"Accept": "application/json"}
 
 response = requests.request("GET", url, headers=headers)
 
-pprint(response.json())
+print(response.text)
