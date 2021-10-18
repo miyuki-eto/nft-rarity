@@ -27,6 +27,7 @@ async def async_metadata_calls(contract):
             result = await make_api_call(session, limiter, url)
             for x in result['assets']:
                 fn_results.append(x)
+    await session.close()
     return fn_results
 
 

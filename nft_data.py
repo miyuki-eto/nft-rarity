@@ -1,6 +1,6 @@
 import pandas as pd
 from nft_metadata import fetch_collection_metadata
-from nft_events import  fetch_collection_events
+from nft_events import fetch_collection_events
 
 # Set pandas display options
 pd.set_option('display.max_columns', None)
@@ -15,7 +15,7 @@ pd.set_option("max_colwidth", 100)
 collection = "0xeE8C0131aa6B66A2CE3cad6D2A039c1473a79a6d"  # ethermerals
 
 metadata = fetch_collection_metadata(collection)
-print(metadata)
+print(metadata.head(10))
 
 events = fetch_collection_events(collection)
 print(events.head(10))

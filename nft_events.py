@@ -30,6 +30,7 @@ async def async_event_calls(contract):
                 break
             start_date = result[-1]['created_date']
             count += 1
+    await session.close()
     return fn_results
 
 
